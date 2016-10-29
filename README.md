@@ -3,7 +3,7 @@ Crawl data simple
 
 ## How to use  
 Write your .py file    
-```  
+```python  
 import crawler from simple_crawler  
 
 targets = [
@@ -17,7 +17,7 @@ print results[0].length
 print results[1].length
 ```  
 Do some simple decoration  
-```  
+```python  
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36'
 }
