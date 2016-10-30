@@ -122,18 +122,29 @@ class Crawler(object):
                 _choices.remove(_cur_target_uuid)
             if (len(self.page_pool[_cur_target_uuid]) >= _cur_target['max_count']):
                 _choices.remove(_cur_target_uuid)
+    
+    def get_page(self):
+        return self.page_pool
 
     def save(self):
         pass
 
-if __name__ == '__main__':
-    test_get_target_info()
-    test_get_url_from_pool()
-    test_generate_target_uuid()
-    test_handle_targets()
+def test_crawler():
     targets = [
         {'uuid': 'test-uuid-1', 'url': 'https://www.baidu.com?page=<1-5/1>', 'count': 1},
         {'uuid': 'test-uuid-2', 'url': 'http://www.163.com?page=<1-5/1>', 'count': 1},
     ]
     crawler = Crawler(targets)
     crawler.start()
+    page_pool = crawler.get_page()
+    assert (map(lambda x: len(page_pool[x]) == 5, page_pool.keys())), 'page pool should store 5 page for per target'
+    print 'crawler test all passed'
+
+
+
+if __name__ == '__main__':
+    test_get_target_info()
+    test_get_url_from_pool()
+    test_generate_target_uuid()
+    test_handle_targets()
+    test_crawler()
