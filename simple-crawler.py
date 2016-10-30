@@ -2,7 +2,10 @@
 import re
 import uuid
 import Queue
+import random
 import requests
+
+random.seed()
 
 # TODO: implement url patterm
 UrlPattern = re.compile('(.*)<(\d+)-(\d+)>')
@@ -63,7 +66,7 @@ def test_generate_target_uuid():
     print 'generate target uuid test all passed'
 
 def handle_targets(targets):
-    _targetDict, _url_pool, _page_pool = {}, {}, {}
+    _target_dict, _url_pool, _page_pool = {}, {}, {}
     # TODO: add validation for targets
     for target in targets:
         # TODO: add validation for target
@@ -72,20 +75,21 @@ def handle_targets(targets):
         if 'next' not in target:
             url_prefix, url_range = get_target_info(target['url'])
             def _generator():
-                return (url_prefix + str(page_index) for page_index in range(url_range[0], url_range[1] + 1))
-            _targetDict[target_uuid] = { 'generator': _generator }
+                __generator = (url_prefix + str(page_index) for page_index in range(url_range[0], url_range[1] + 1))
+                return __generator.next()
+            _target_dict[target_uuid] = { 'generator': _generator }
         else:
             _url_pool[target_uuid] = Queue.Queue()
             max_count = CeilCount if 'count' not in target else target['count']
             def _generator():
                 return get_url_from_pool(target_uuid, _url_pool)
-            _targetDict[target_uuid] = {
+            _target_dict[target_uuid] = {
                 'generator': _generator,
                 'max_count': max_count
             }
         
 
-    return _targetDict, _url_pool, _page_pool
+    return _target_dict, _url_pool, _page_pool
 
 def test_handle_targets():
     targets = [
@@ -93,22 +97,44 @@ def test_handle_targets():
         { 'url': 'https://www.baidu.com/page=<0-100>', 'next': '<a>(.*)</a>', 'count': 100, 'uuid': 'test-uuid-1'},
     ]
     test_url_pattern = re.compile('https://www.baidu.com/page?\d+')
-    targetDict, url_pool, page_pool = handle_targets(targets)
-    assert map(test_url_pattern.match, targetDict['test-uuid']['generator']()), 'result should match url pattern'
+    target_dict, url_pool, page_pool = handle_targets(targets)
+    assert map(test_url_pattern.match, target_dict['test-uuid']['generator']()), 'result should match url pattern'
     assert isinstance(url_pool['test-uuid-1'], Queue.Queue), 'url pool should be instance of Queue'
     assert len(page_pool['test-uuid']) == len(page_pool['test-uuid-1']) == 0, 'init page pool should exist and empty'   
     print 'handle targets test all passed'
 
 class Crawler(object):
     def __init__(self, targets):
-        self._targets, self._url_pool = handleTargets(targets)
-        self._page_pool = {}
-    def start():
+        self.target_dict, self.url_pool, self.page_pool = handle_targets(targets)
+        
+    
+    def use_headers(self, headers):
         pass
+
+    def use_proxies(self, proxies):
+        pass
+
+    def start(self):
+        _choices = self.target_dict.keys()
+        while True:
+            _cur_target = self.target_dict[random.choice(_choices)]
+            target_url = _cur_target['generator']()
+            # TODO: use Session
+            # TODO: allow method choosen
+            if (target_url != 'All Set'):
+                response = requests.get(target_url)
+                print response.text
+            else:
+                break
 
 if __name__ == '__main__':
     test_get_target_info()
     test_get_url_from_pool()
     test_generate_target_uuid()
     test_handle_targets()
-    init()
+    targets = [
+        {'uuid': 'test-uuid-1', 'url': 'https://www.baidu.com?page=<1-5>'},
+        {'uuid': 'test-uuid-2', 'url': 'http://www.163.com?page=<1-5>'},
+    ]
+    crawler = Crawler(targets)
+    crawler.start()
