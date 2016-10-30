@@ -8,7 +8,8 @@ import crawler from simple_crawler
 
 targets = [
     { 'url': 'http://example.com', 'next': '<a href="(.*)">(.*)</a>', 'max': 100},
-    { 'url': 'http://example.com/list?page=<0-100>'}
+    { 'url': 'http://example.com/list?page=<0-100>'},
+    { 'url': 'http://example.com/list?page=<0-100>', 'uuid': 'test'}
 ]
 
 results = crawler.start(targets)
