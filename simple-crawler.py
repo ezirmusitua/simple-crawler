@@ -63,11 +63,12 @@ def test_generate_target_uuid():
     print 'generate target uuid test all passed'
 
 def handle_targets(targets):
-    _targetDict, _url_pool = {}, {}
+    _targetDict, _url_pool, _page_pool = {}, {}, {}
     # TODO: add validation for targets
     for target in targets:
         # TODO: add validation for target
         target_uuid = generate_target_uuid(target)
+        _page_pool[target_uuid] = [] 
         if 'next' not in target:
             url_prefix, url_range = get_target_info(target['url'])
             def _generator():
@@ -84,7 +85,7 @@ def handle_targets(targets):
             }
         
 
-    return _targetDict, _url_pool
+    return _targetDict, _url_pool, _page_pool
 
 def test_handle_targets():
     targets = [
@@ -92,9 +93,10 @@ def test_handle_targets():
         { 'url': 'https://www.baidu.com/page=<0-100>', 'next': '<a>(.*)</a>', 'count': 100, 'uuid': 'test-uuid-1'},
     ]
     test_url_pattern = re.compile('https://www.baidu.com/page?\d+')
-    targetDict, url_pool = handle_targets(targets)
+    targetDict, url_pool, page_pool = handle_targets(targets)
     assert map(test_url_pattern.match, targetDict['test-uuid']['generator']()), 'result should match url pattern'
-    assert isinstance(url_pool['test-uuid-1'], Queue.Queue), 'url pool should be instance of Queue'  
+    assert isinstance(url_pool['test-uuid-1'], Queue.Queue), 'url pool should be instance of Queue'
+    assert len(page_pool['test-uuid']) == len(page_pool['test-uuid-1']) == 0, 'init page pool should exist and empty'   
     print 'handle targets test all passed'
 
 class Crawler(object):
