@@ -8,15 +8,10 @@ import requests
 random.seed()
 
 # TODO: implement url patterm
-UrlPattern = re.compile('(.*)<(\d+)-(\d+)>')
+UrlPattern = re.compile('(.*)<(\d+)-(\d+)\/(\d+)>')
 
-# TODO: make it makesense
+# TODO: make it make-sense
 CeilCount = 99999
-
-def init():
-    response = requests.get('https://www.baidu.com')
-    if (response.ok):
-        print "Gotcha"
 
 def get_target_info(target_url):
     match_res = UrlPattern.match(target_url).groups()
@@ -24,12 +19,13 @@ def get_target_info(target_url):
     return (match_res[0], map(int, match_res[1:]))
 
 def test_get_target_info():
-    target_url = 'https://www.baidu.com/page?<0-100>'
+    target_url = 'https://www.baidu.com/page?<0-100/10>'
     url_prefix, url_range = get_target_info(target_url)
-    assert len(url_range) is 2, 'match should only have 3 element, but got %r' % len(url_range)
+    assert len(url_range) is 3, 'match should only have 3 element, but got %r' % len(url_range)
     assert isinstance(url_range[0], int), 'range floor should be integer'
     assert isinstance(url_range[1], int), 'range ceil should be integer'
     assert url_range[0] < url_range[1], 'range ceil should bigger than floor'
+    assert url_range[2] > 0, 'range step should postive'
     print 'get target info test all passed'
 
 def get_url_from_pool(target_uuid, pool):
@@ -71,30 +67,27 @@ def handle_targets(targets):
     for target in targets:
         # TODO: add validation for target
         target_uuid = generate_target_uuid(target)
+        _target_dict[target_uuid] = {}
+        _target_dict[target_uuid]['max_count'] = CeilCount if 'count' not in target else target['count']
         _page_pool[target_uuid] = [] 
         if 'next' not in target:
             url_prefix, url_range = get_target_info(target['url'])
             def _generator():
-                __generator = (url_prefix + str(page_index) for page_index in range(url_range[0], url_range[1] + 1))
+                __generator = (url_prefix + str(page_index) for page_index in range(url_range[0], url_range[1] + 1, url_range[2]))
                 return __generator.next()
-            _target_dict[target_uuid] = { 'generator': _generator }
+            _target_dict[target_uuid]['generator'] = _generator
         else:
-            _url_pool[target_uuid] = Queue.Queue()
-            max_count = CeilCount if 'count' not in target else target['count']
+            _url_pool[target_uuid] = Queue.Queue()    
             def _generator():
                 return get_url_from_pool(target_uuid, _url_pool)
-            _target_dict[target_uuid] = {
-                'generator': _generator,
-                'max_count': max_count
-            }
+            _target_dict[target_uuid]['generator'] = _generator
         
-
     return _target_dict, _url_pool, _page_pool
 
 def test_handle_targets():
     targets = [
-        { 'url': 'https://www.baidu.com/page?<0-100>', 'uuid': 'test-uuid' },
-        { 'url': 'https://www.baidu.com/page=<0-100>', 'next': '<a>(.*)</a>', 'count': 100, 'uuid': 'test-uuid-1'},
+        { 'url': 'https://www.baidu.com/page?<0-100/10>', 'uuid': 'test-uuid' },
+        { 'url': 'https://www.baidu.com', 'next': 'None', 'count': 100, 'uuid': 'test-uuid-1'},
     ]
     test_url_pattern = re.compile('https://www.baidu.com/page?\d+')
     target_dict, url_pool, page_pool = handle_targets(targets)
@@ -116,16 +109,22 @@ class Crawler(object):
 
     def start(self):
         _choices = self.target_dict.keys()
-        while True:
-            _cur_target = self.target_dict[random.choice(_choices)]
+        while len(_choices) != 0:
+            _cur_target_uuid = random.choice(_choices)
+            _cur_target = self.target_dict[_cur_target_uuid]
             target_url = _cur_target['generator']()
             # TODO: use Session
             # TODO: allow method choosen
             if (target_url != 'All Set'):
                 response = requests.get(target_url)
-                print response.text
+                self.page_pool[_cur_target_uuid].append(response.content)
             else:
-                break
+                _choices.remove(_cur_target_uuid)
+            if (len(self.page_pool[_cur_target_uuid]) >= _cur_target['max_count']):
+                _choices.remove(_cur_target_uuid)
+
+    def save(self):
+        pass
 
 if __name__ == '__main__':
     test_get_target_info()
@@ -133,8 +132,8 @@ if __name__ == '__main__':
     test_generate_target_uuid()
     test_handle_targets()
     targets = [
-        {'uuid': 'test-uuid-1', 'url': 'https://www.baidu.com?page=<1-5>'},
-        {'uuid': 'test-uuid-2', 'url': 'http://www.163.com?page=<1-5>'},
+        {'uuid': 'test-uuid-1', 'url': 'https://www.baidu.com?page=<1-5/1>', 'count': 1},
+        {'uuid': 'test-uuid-2', 'url': 'http://www.163.com?page=<1-5/1>', 'count': 1},
     ]
     crawler = Crawler(targets)
     crawler.start()

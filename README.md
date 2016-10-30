@@ -35,3 +35,9 @@ crawler.use_proxies(proxies);
 
 ## How to install  
 pip instal simple-crawler
+
+## TODOs
+ - [ ] Implement extract `next` from page and store to queue
+ - [ ] Use Session of requests and allow using other METHOD  
+ - [ ] Implement `use_headers` and `use_proxies` method
+ - [ ] Implement `save` method that use to save page to json file
