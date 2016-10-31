@@ -41,6 +41,12 @@ pip instal simple-crawler
  - [ ] Implement extract `next` from page and store to queue
  - [x] Use Session of requests and allow using other METHOD  
  - [x] Implement `use_headers` and `use_proxies` method
- - [ ] Implement `save` method that use to save page to json file
+ - [x] Add crawl time gap
+ - [ ] Use gevent
+ - [ ] add expection handler
+ - [ ] Add method to set timeout of request
+ - [ ] Update url constructor, use format not concat
+ - [x] Implement `save` method that use to save page to json file
+ - [ ] Implement post template parser
  - [ ] Check why previous implemention was wrong
  - [ ] Rewrite all tests

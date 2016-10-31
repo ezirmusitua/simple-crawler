@@ -1,14 +1,3 @@
-# -*- coding: utf-8 -*-  
-import re
-import uuid
-import json
-import Queue
-import random
-import pprint
-import requests
-
-random.seed()
-
 # TODO: implement url patterm
 UrlPattern = re.compile('.*(https?://[^<>]*)')
 # TODO: implement url patterm
@@ -101,18 +90,22 @@ def request_by_session(session, method, url, params = None, data = None, json = 
     if AllowedMethod.index(method.upper()) > -1:
         _method = method.upper()
     # TODO: Add validation for url
-    return session.request(_method, url, params, data, json)
+    return session.request(_method, url, params, data, json, timeout = 5)
 
 class Crawler(object):
-    def __init__(self, target, headers = None, proxies = None):
+    def __init__(self, target, headers = None, proxies = None, sleep_time = 0):
         self.session = create_session_obj(headers, proxies)
         self.target = handle_targets(target)
+        self.sleep_time = sleep_time
     
     def use_headers(self, headers):
         self.session.headers.update(headers)
 
     def use_proxies(self, proxies):
         self.session.proxies.update(proxies)
+
+    def use_sleep_time(self, sleep_time):
+        self.sleep_time = sleep_time
 
     def start(self):
         while not self.target['urls'].empty() and len(self.target['pages']) < self.target['count']:
@@ -122,14 +115,15 @@ class Crawler(object):
             if (target_url != 'All Set'):
                 response = request_by_session(self.session, self.target['method'], target_url,
                     self.target['params'], self.target['data'], self.target['json'])
-                print response.content
                 self.target['pages'].append(response.content)
+            # TODO: use function
+            time.sleep(self.sleep_time)
     
     def get_page(self):
         return self.target['pages']
 
     def save(self):
-        pass
-
-if __name__ == '__main__':
-    print 'here i am'
+        # TODO: allow custom
+        with codecs.open('data/' + self.target['name'] + '.json', 'wb', 'utf-8') as wf:
+            # TODO: allow use filter function
+            json.dump(self.target['pages'], wf)

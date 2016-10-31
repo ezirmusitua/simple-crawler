@@ -1,8 +1,3 @@
-
-
-
-
-
 def test_crawler():
     targets = [
         {'uuid': 'test-uuid-1', 'url': 'https://httpbin.org/headers?page=<1-5/1>', 'count': 1},
