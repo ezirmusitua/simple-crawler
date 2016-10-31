@@ -33,11 +33,11 @@ def test_get_url_from_pool():
     print 'get url from pool test all passed'
 
 
-def test_generate_target_uuid():
-    target_1 = {'uuid': 'test_uuid'}
-    uuid_1 = generate_target_uuid(target_1)
+def test_generate_target_name():
+    target_1 = {'name': 'test_uuid'}
+    uuid_1 = generate_target_name(target_1)
     target_2 = {}
-    uuid_2 = generate_target_uuid(target_2)
+    uuid_2 = generate_target_name(target_2)
 
     assert uuid_1 == 'test_uuid', 'if has `uuid` should return uuid'
     assert uuid_2 != '' and uuid_2 != 'test_uuid' , 'if no `uuid` should return UUID str'
@@ -85,3 +85,37 @@ def test_create_session_obj():
     assert s2.headers == test_headers, 'if give headers param then session headers should equal to given one'
     assert s2.proxies == test_proxies, 'if give proxies param then session proxies should equal to given one'
     print 'create session object test all passed'
+
+def test_get_range_info():
+    target_1 = {
+        'range': {
+            'from': 0,
+            'to': 100,
+            'step': 5
+        }
+    }
+    _from, _to, _step = get_range_info(target_1)
+    assert _from == 0, 'from not equal to given, got %d, but need %d' % (_from, 0)
+    assert _to == 100, 'to not equal to given, got %d, but need %d' % (_to, 100)
+    assert _step == 5, 'step not equal to given, got %d, but need %d' % (_step, 5)
+    target_2 = {
+        'range': {
+            'to': 100,
+            'step': 5
+        }
+    }
+    _from, _to, _step = get_range_info(target_2)
+    assert _from == 0, 'default from equal to 0, but got %d' % _from 
+    target_3 = {
+        'range': {
+            'step': 5
+        }
+    }
+    _from, _to, _step = get_range_info(target_3)
+    assert _from == 0, 'default from equal to 0, but got %d' % _from
+    assert _to == 9999, 'default to equal to 0, but got %d' % _to
+    target_4 = { 'range': {} }
+    _from, _to, _step = get_range_info(target_4)
+    assert _from == 0, 'default from equal to 0, but got %d' % _from
+    assert _to == 9999, 'default to equal to 0, but got %d' % _to
+    assert _step == 1, 'default step equal to 0, but got %d' % _step
