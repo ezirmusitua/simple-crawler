@@ -7,7 +7,7 @@ Write your .py file
 import crawler from simple_crawler  
 
 targets = [
-    { 'url': 'http://example.com', 'next': '<a href="(.*)">(.*)</a>', 'max': 100},
+    { 'url': 'http://example.com', 'next': '<a href="(.*)">(.*)</a>', 'max': 100, 'method': 'GET'},
     { 'url': 'http://example.com/list?page=<0-100>'},
     { 'url': 'http://example.com/list?page=<0-100>', 'uuid': 'test'}
 ]
@@ -41,3 +41,5 @@ pip instal simple-crawler
  - [ ] Use Session of requests and allow using other METHOD  
  - [ ] Implement `use_headers` and `use_proxies` method
  - [ ] Implement `save` method that use to save page to json file
+ - [ ] Check why previous implemention was wrong
+ - [ ] Rewrite all tests
