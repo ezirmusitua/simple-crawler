@@ -45,7 +45,7 @@ pip instal simple-crawler
  - [ ] Use gevent
  - [ ] add expection handler
  - [ ] Add method to set timeout of request
- - [ ] Update url constructor, use format not concat
+ - [x] Update url constructor, use format not concat
  - [x] Implement `save` method that use to save page to json file
  - [ ] Implement post template parser
  - [ ] Check why previous implemention was wrong

@@ -4,7 +4,8 @@ import uuid
 import time
 import json
 import Queue
-import codecs   
+import codecs
+import chardet   
 import random
 import pprint
 import functools
@@ -87,18 +88,29 @@ def get_target_next_url(target):
         def _url_generator():
             _range_list = range(_from, _to, _step)
             for page_index in _range_list:
-                yield target['url'] % page_index
+                yield target['url'].format(pageIndex=page_index)
         _generator = _url_generator().next
     if ('pattern' in target):
         # TODO: timeout to constant
         _generator = functools.partial(target['urls'].get, blocked = false, timeout = 5)
     return _generator
 
+def get_target_is_empty(target, urls, pages):
+    _is_empty = None
+    if 'pattern' in target:
+        _is_empty = urls.epmty
+    if 'range' in target:
+        _from, _to, _step = get_range_info(target)
+        def is_empty():
+            return len(pages) >= int((_to - _from) / _step)
+        _is_empty = is_empty
+    return _is_empty
+
 
 def handle_target(target):
     _target = {}
     # TODO: add validation for target
-    target['urls'] = Queue.Queue()
+    _target['urls'] = Queue.Queue()
     _target['pages'] = []
     _target['name'] = get_target_name(target)
     _target['count'] = get_target_count(target, CeilCount)
@@ -107,6 +119,7 @@ def handle_target(target):
     _target['data'] = get_target_data(target)
     _target['json'] = get_target_json(target)
     _target['next-url'] = get_target_next_url(target)
+    _target['is-empty'] = get_target_is_empty(target, _target['urls'], _target['pages'])
     return _target
 
 def test_handle_target():
@@ -142,7 +155,7 @@ def request_by_session(session, method, url, params = None, data = None, json = 
 class Crawler(object):
     def __init__(self, target, headers = None, proxies = None, sleep_time = 0):
         self.session = create_session_obj(headers, proxies)
-        self.target = handle_targets(target)
+        self.target = handle_target(target)
         self.sleep_time = sleep_time
     
     def use_headers(self, headers):
@@ -155,25 +168,26 @@ class Crawler(object):
         self.sleep_time = sleep_time
 
     def start(self):
-        while not self.target['urls'].empty() and len(self.target['pages']) < self.target['count']:
-            target_url = self.target['generator']()
+        while not self.target['is-empty']():
+            target_url = self.target['next-url']()
             print '-', target_url
             # TODO: allow method choosen
-            if (target_url != 'All Set'):
-                response = request_by_session(self.session, self.target['method'], target_url,
-                    self.target['params'], self.target['data'], self.target['json'])
-                self.target['pages'].append(response.content)
+            response = request_by_session(self.session, self.target['method'], target_url, self.target['params'], self.target['data'], self.target['json'])
+            if 'encoding' not in self.target:
+                self.target['encoding'] = chardet.detect(response.content)['encoding']
+            self.target['pages'].append(response.content)
             # TODO: use function
             time.sleep(self.sleep_time)
     
     def get_page(self):
         return self.target['pages']
 
-    def save(self):
+    def save(self, encoding = 'utf8'):
         # TODO: allow custom
-        with codecs.open('data/' + self.target['name'] + '.json', 'wb', 'utf-8') as wf:
+        with codecs.open('data/' + self.target['name'] + '.json', 'wb', encoding=encoding) as wf:
+            # print chardet.detect(self.target[pages][0])
             # TODO: allow use filter function
-            json.dump(self.target['pages'], wf)
+            json.dump(self.target['pages'], wf, encoding=self.target['encoding'])
 
 if __name__ == '__main__':
     test_handle_target()
