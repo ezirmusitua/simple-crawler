@@ -4,7 +4,7 @@ Crawl data simple
 ## How to use  
 Write your .py file    
 ```python  
-import crawler from simple_crawler  
+import Crawler from simple_crawler  
 
 targets = [
     { 'url': 'http://example.com', 'next': '<a href="(.*)">(.*)</a>', 'max': 100, 'method': 'GET'},
@@ -12,10 +12,11 @@ targets = [
     { 'url': 'http://example.com/list?page=<0-100>', 'uuid': 'test'}
 ]
 
-results = crawler.start(targets)
+crawler = Crawler = [targets[0]]
+crawler.start()
+pages = crawler.get_page()
 
-print results[0].length
-print results[1].length
+print pages.length
 ```  
 Do some simple decoration  
 ```python  
@@ -38,8 +39,8 @@ pip instal simple-crawler
 
 ## TODOs
  - [ ] Implement extract `next` from page and store to queue
- - [ ] Use Session of requests and allow using other METHOD  
- - [ ] Implement `use_headers` and `use_proxies` method
+ - [x] Use Session of requests and allow using other METHOD  
+ - [x] Implement `use_headers` and `use_proxies` method
  - [ ] Implement `save` method that use to save page to json file
  - [ ] Check why previous implemention was wrong
  - [ ] Rewrite all tests
