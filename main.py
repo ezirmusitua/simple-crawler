@@ -150,7 +150,9 @@ def request_by_session(session, method, url, params = None, data = None, json = 
     try:
         return session.request(_method, url, params, data, json, timeout = 5)
     except Exception:
-        return {content: 'requests error happend!'} 
+        class Tmp(object):
+            content = 'requests error happend!'
+        return Tmp()
 
 class Crawler(object):
     def __init__(self, target, headers = None, proxies = None, sleep_time = 0):
